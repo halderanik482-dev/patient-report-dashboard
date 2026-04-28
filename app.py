@@ -18,16 +18,32 @@ st.markdown("""
 
 # --- INITIALIZE API ---
 try:
-    # This securely fetches the key from the Streamlit Cloud settings
     api_key = st.secrets["API_KEY"]
     genai.configure(api_key=api_key)
     
-    # Using 'latest' helps prevent 404 model errors on Streamlit Cloud
-    model = genai.GenerativeModel('gemini-pro')
+    # --- THE FOOLPROOF FIX: AUTO-DISCOVER MODEL ---
+    # Instead of guessing the name, ask Google what models this key can use
+    available_models = []
+    for m in genai.list_models():
+        if 'generateContent' in m.supported_generation_methods:
+            available_models.append(m.name)
+    
+    if not available_models:
+        st.error("Error: Your API key is connected, but Google says there are no models available for it.")
+        st.stop()
+        
+    # Automatically pick the fastest 'flash' model, or fallback to whatever is available
+    chosen_model = next((name for name in available_models if 'flash' in name), available_models[0])
+    
+    # Load the dynamically chosen model
+    model = genai.GenerativeModel(chosen_model)
+    
 except KeyError:
     st.error("System Error: API Key not found in Secrets. Please configure the app settings.")
     st.stop()
-
+except Exception as e:
+    st.error(f"API Connection Error: {e}")
+    st.stop()
 # --- HELPER FUNCTIONS ---
 def extract_text_from_pdf(file):
     pdf_reader = PdfReader(file)
