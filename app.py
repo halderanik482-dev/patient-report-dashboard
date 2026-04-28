@@ -23,7 +23,7 @@ try:
     genai.configure(api_key=api_key)
     
     # Using 'latest' helps prevent 404 model errors on Streamlit Cloud
-    model = genai.GenerativeModel('gemini-1.5-flash') 
+    model = genai.GenerativeModel('gemini-pro')
 except KeyError:
     st.error("System Error: API Key not found in Secrets. Please configure the app settings.")
     st.stop()
