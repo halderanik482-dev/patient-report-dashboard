@@ -17,15 +17,16 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- INITIALIZE API ---
-# In production, use st.secrets. For local testing, you can input it in the sidebar.
-api_key = st.sidebar.text_input("Enter Gemini API Key:", type="password")
-
-if api_key:
+try:
+    # This securely fetches the key from the Streamlit Cloud settings
+    api_key = st.secrets["API_KEY"]
     genai.configure(api_key=api_key)
-    # Using 1.5 Flash for multimodal speed and accuracy
-    model = genai.GenerativeModel('gemini-1.5-flash') 
-else:
-    st.sidebar.warning("Please enter your API key to proceed.")
+    
+    # Using 'latest' helps prevent 404 model errors on Streamlit Cloud
+    model = genai.GenerativeModel('gemini-1.5-flash-latest') 
+except KeyError:
+    st.error("System Error: API Key not found in Secrets. Please configure the app settings.")
+    st.stop()
 
 # --- HELPER FUNCTIONS ---
 def extract_text_from_pdf(file):
